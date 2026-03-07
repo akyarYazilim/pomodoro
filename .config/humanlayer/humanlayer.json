@@ -1,0 +1,11 @@
+{
+  "thoughts": {
+    "thoughtsRepo": "C:\\Users\\monster\\thoughts",
+    "reposDir": "repos",
+    "globalDir": "global",
+    "user": "user",
+    "repoMappings": {
+      "C:\\Users\\monster\\Desktop\\pomodoro": "pomodoro"
+    }
+  }
+}
