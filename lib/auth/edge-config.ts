@@ -12,5 +12,15 @@ export const edgeAuthConfig: NextAuthConfig = {
     authorized({ auth }) {
       return !!auth
     },
+    session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub as string,
+          onboardingComplete: (token.onboardingComplete ?? true) as boolean,
+        },
+      }
+    },
   },
 }

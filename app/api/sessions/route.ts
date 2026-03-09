@@ -3,6 +3,25 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db/client"
 import { createSessionSchema } from "@/lib/validators/session"
 
+export async function GET(req: Request) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Yetkisiz" }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(req.url)
+  const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50)
+
+  const sessions = await prisma.focusSession.findMany({
+    where: { userId: session.user.id, status: "COMPLETED" },
+    orderBy: { startedAt: "desc" },
+    take: limit,
+    include: { task: { select: { title: true } } },
+  })
+
+  return NextResponse.json(sessions)
+}
+
 export async function POST(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {

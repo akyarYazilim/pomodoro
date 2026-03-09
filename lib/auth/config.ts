@@ -37,12 +37,25 @@ export const authConfig: NextAuthConfig = {
     error: "/login",
   },
   callbacks: {
-    jwt({ token, user }) {
-      if (user) token.sub = user.id
+    jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.sub = user.id
+        token.onboardingComplete = (user as { onboardingComplete?: boolean }).onboardingComplete ?? false
+      }
+      if (trigger === "update" && session?.onboardingComplete !== undefined) {
+        token.onboardingComplete = session.onboardingComplete
+      }
       return token
     },
     session({ session, token }) {
-      return { ...session, user: { ...session.user, id: token.sub as string } }
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub as string,
+          onboardingComplete: token.onboardingComplete as boolean,
+        },
+      }
     },
   },
 }

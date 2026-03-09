@@ -2,6 +2,7 @@
 
 import { useRef, useCallback } from "react"
 import type { TimerCompletePayload } from "@/hooks/useTimer"
+import { sounds } from "@/lib/utils/sounds"
 
 interface SessionRecorderReturn {
   onTimerComplete: (payload: TimerCompletePayload) => Promise<void>
@@ -16,6 +17,8 @@ export function useSessionRecorder(): SessionRecorderReturn {
     // Only record FOCUS phases (not breaks)
     if (mode === "POMODORO" && phase !== "FOCUS") return
     if (durationSeconds < 60) return
+
+    sounds.workComplete()
 
     const actualMinutes = Math.floor(durationSeconds / 60)
 

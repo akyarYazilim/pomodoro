@@ -8,6 +8,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl
 
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register")
+  const isOnboarding = pathname.startsWith("/onboarding")
   const isDashboard =
     pathname === "/" ||
     pathname.startsWith("/timer") ||
@@ -15,11 +16,19 @@ export default auth((req) => {
     pathname.startsWith("/stats") ||
     pathname.startsWith("/coach")
 
-  if (isDashboard && !isLoggedIn) {
+  if ((isDashboard || isOnboarding) && !isLoggedIn) {
     return Response.redirect(new URL("/login", req.nextUrl))
   }
 
   if (isAuthPage && isLoggedIn) {
+    return Response.redirect(new URL("/", req.nextUrl))
+  }
+
+  const onboardingComplete = req.auth?.user?.onboardingComplete ?? true
+  if (isDashboard && isLoggedIn && !onboardingComplete) {
+    return Response.redirect(new URL("/onboarding", req.nextUrl))
+  }
+  if (isOnboarding && isLoggedIn && onboardingComplete) {
     return Response.redirect(new URL("/", req.nextUrl))
   }
 })

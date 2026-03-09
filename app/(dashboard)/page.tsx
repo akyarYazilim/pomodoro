@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Timer, CheckSquare, BarChart2, Flame, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatMinutes } from "@/lib/utils/format"
+import { SuggestionCard } from "@/components/coach/SuggestionCard"
+import { useDailyTip } from "@/hooks/useCoach"
 
 interface DailyStats {
   totalMinutes: number
@@ -18,6 +20,7 @@ interface StreakStats {
 export default function DashboardPage() {
   const [daily, setDaily] = useState<DailyStats | null>(null)
   const [streak, setStreak] = useState<StreakStats | null>(null)
+  const { tip, loading: tipLoading } = useDailyTip()
 
   useEffect(() => {
     Promise.all([
@@ -118,6 +121,8 @@ export default function DashboardPage() {
           </Card>
         </Link>
       </div>
+
+      <SuggestionCard tip={tip} loading={tipLoading} />
     </div>
   )
 }

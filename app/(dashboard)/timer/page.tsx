@@ -7,6 +7,8 @@ import { ModeSelector } from "@/components/timer/ModeSelector"
 import { TimerDisplay } from "@/components/timer/TimerDisplay"
 import { TimerControls } from "@/components/timer/TimerControls"
 import { TaskSelector } from "@/components/timer/TaskSelector"
+import { BreakPrompt } from "@/components/timer/BreakPrompt"
+import { SessionHistory } from "@/components/timer/SessionHistory"
 
 export default function TimerPage() {
   const { setMode, setActiveTask, activeTaskId } = useTimerStore()
@@ -15,6 +17,10 @@ export default function TimerPage() {
     useTimer(onTimerComplete)
 
   const isRunning = status === "RUNNING"
+  const showBreakPrompt =
+    mode === "POMODORO" &&
+    (phase === "SHORT_BREAK" || phase === "LONG_BREAK") &&
+    status === "IDLE"
 
   function handleModeChange(newMode: typeof mode) {
     if (isRunning) return
@@ -34,21 +40,32 @@ export default function TimerPage() {
         pomodoroCount={pomodoroCount}
       />
 
-      <TimerControls
-        mode={mode}
-        status={status}
-        onStart={start}
-        onPause={pause}
-        onResume={resume}
-        onStop={stop}
-        onSkip={skipPhase}
-      />
+      {showBreakPrompt ? (
+        <BreakPrompt
+          phase={phase as "SHORT_BREAK" | "LONG_BREAK"}
+          breakMinutes={Math.round(secondsLeft / 60)}
+          onStart={start}
+          onSkip={skipPhase}
+        />
+      ) : (
+        <TimerControls
+          mode={mode}
+          status={status}
+          onStart={start}
+          onPause={pause}
+          onResume={resume}
+          onStop={stop}
+          onSkip={skipPhase}
+        />
+      )}
 
       <TaskSelector
         activeTaskId={activeTaskId}
         onSelect={setActiveTask}
         disabled={isRunning}
       />
+
+      <SessionHistory />
     </div>
   )
 }
