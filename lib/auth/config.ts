@@ -7,7 +7,7 @@ import type { NextAuthConfig } from "next-auth"
 
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -37,8 +37,12 @@ export const authConfig: NextAuthConfig = {
     error: "/login",
   },
   callbacks: {
-    session({ session, user }) {
-      return { ...session, user: { ...session.user, id: user.id } }
+    jwt({ token, user }) {
+      if (user) token.sub = user.id
+      return token
+    },
+    session({ session, token }) {
+      return { ...session, user: { ...session.user, id: token.sub as string } }
     },
   },
 }
