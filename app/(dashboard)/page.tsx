@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
 import { SuggestionCard } from "@/components/coach/SuggestionCard"
 import { MilestoneCard } from "@/components/dashboard/MilestoneCard"
+import { GoalCompletionCard } from "@/components/dashboard/GoalCompletionCard"
 import { useDailyTip } from "@/hooks/useCoach"
 import { useStats } from "@/hooks/useStats"
 import { useStreak } from "@/hooks/useStreak"
@@ -48,6 +49,10 @@ export default function DashboardPage() {
       </div>
 
       <MilestoneCard />
+
+      {!loading && daily && daily.totalMinutes >= daily.dailyGoalMinutes && (
+        <GoalCompletionCard daily={daily} />
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Card>

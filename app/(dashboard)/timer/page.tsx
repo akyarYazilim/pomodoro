@@ -12,6 +12,7 @@ import { TimerControls } from "@/components/timer/TimerControls"
 import { TaskSelector } from "@/components/timer/TaskSelector"
 import { BreakPrompt } from "@/components/timer/BreakPrompt"
 import { ContinueDialog } from "@/components/timer/ContinueDialog"
+import { MoodDialog } from "@/components/timer/MoodDialog"
 import { SessionHistory } from "@/components/timer/SessionHistory"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -21,6 +22,7 @@ export default function TimerPage() {
   const { setMode, setActiveTask, activeTaskId, initFromSession, deepFocusMode, setDeepFocusMode } = useTimerStore()
   const [justCompleted, setJustCompleted] = useState(false)
   const [showContinueDialog, setShowContinueDialog] = useState(false)
+  const [moodSessionId, setMoodSessionId] = useState<string | null>(null)
 
   useEffect(() => {
     if (session?.user) {
@@ -28,13 +30,14 @@ export default function TimerPage() {
     }
   }, [session, initFromSession])
 
-  const { onTimerComplete } = useSessionRecorder()
+  const { onTimerComplete, submitMood } = useSessionRecorder()
 
   const handleComplete = useCallback(
-    (payload: TimerCompletePayload) => {
-      onTimerComplete(payload)
+    async (payload: TimerCompletePayload) => {
+      const sessionId = await onTimerComplete(payload)
       setJustCompleted(true)
       setTimeout(() => setJustCompleted(false), 1500)
+      if (sessionId) setMoodSessionId(sessionId)
     },
     [onTimerComplete]
   )
@@ -69,6 +72,15 @@ export default function TimerPage() {
   function handleFinish() {
     setShowContinueDialog(false)
     stop()
+  }
+
+  function handleMoodRate(mood: number) {
+    if (moodSessionId) submitMood(moodSessionId, mood)
+    setMoodSessionId(null)
+  }
+
+  function handleMoodSkip() {
+    setMoodSessionId(null)
   }
 
   return (
@@ -134,6 +146,12 @@ export default function TimerPage() {
         elapsedSeconds={secondsLeft}
         onContinue={handleContinue}
         onFinish={handleFinish}
+      />
+
+      <MoodDialog
+        open={moodSessionId !== null}
+        onRate={handleMoodRate}
+        onSkip={handleMoodSkip}
       />
     </div>
   )

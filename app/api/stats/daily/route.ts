@@ -13,13 +13,19 @@ export async function GET() {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const sessions = await prisma.focusSession.findMany({
-    where: {
-      userId: session.user.id,
-      status: "COMPLETED",
-      startedAt: { gte: today, lt: tomorrow },
-    },
-  })
+  const [sessions, user] = await Promise.all([
+    prisma.focusSession.findMany({
+      where: {
+        userId: session.user.id,
+        status: "COMPLETED",
+        startedAt: { gte: today, lt: tomorrow },
+      },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { dailyGoalMinutes: true },
+    }),
+  ])
 
   const totalMinutes = sessions.reduce((sum, s) => sum + s.actualMinutes, 0)
   const pomodoroCount = sessions.filter((s) => s.mode === "POMODORO").length
@@ -30,5 +36,6 @@ export async function GET() {
     sessionCount: sessions.length,
     pomodoroCount,
     flowtimeCount,
+    dailyGoalMinutes: user?.dailyGoalMinutes ?? 120,
   })
 }

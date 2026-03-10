@@ -30,6 +30,8 @@ model User {
   onboardingComplete   Boolean   @default(false)
   persona              String?
   firstSessionAt       DateTime?
+  longestSession       Int       @default(0)
+  bestDayMinutes       Int       @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

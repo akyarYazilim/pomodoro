@@ -7,10 +7,12 @@ import { StreakDisplay } from "@/components/stats/StreakDisplay"
 import { WeeklySummary } from "@/components/stats/WeeklySummary"
 import { FocusChart } from "@/components/stats/FocusChart"
 import { WeeklySummaryCard } from "@/components/stats/WeeklySummaryCard"
+import { QualityScore } from "@/components/stats/QualityScore"
+import { PersonalRecords } from "@/components/stats/PersonalRecords"
 import { NotificationPermissionCard } from "@/components/notifications/NotificationPermissionCard"
 
 export default function StatsPage() {
-  const { daily, weekly, loading: statsLoading } = useStats()
+  const { daily, weekly, weeklyStats, loading: statsLoading } = useStats()
   const { streak, loading: streakLoading } = useStreak()
 
   return (
@@ -23,8 +25,12 @@ export default function StatsPage() {
       <div className="grid grid-cols-3 gap-3">
         <DailySummary stats={daily} loading={statsLoading} />
         <StreakDisplay streak={streak} loading={streakLoading} />
-        <WeeklySummary weekly={weekly} loading={statsLoading} />
+        <WeeklySummary weeklyStats={weeklyStats} loading={statsLoading} />
       </div>
+
+      <QualityScore />
+
+      <PersonalRecords />
 
       <WeeklySummaryCard />
 

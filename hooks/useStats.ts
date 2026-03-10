@@ -7,6 +7,7 @@ export interface DailyStats {
   sessionCount: number
   pomodoroCount: number
   flowtimeCount: number
+  dailyGoalMinutes: number
 }
 
 export interface WeekDay {
@@ -14,9 +15,16 @@ export interface WeekDay {
   minutes: number
 }
 
+export interface WeeklyStats {
+  days: WeekDay[]
+  currentWeekTotal: number
+  previousWeekTotal: number
+}
+
 export function useStats() {
   const [daily, setDaily] = useState<DailyStats | null>(null)
   const [weekly, setWeekly] = useState<WeekDay[]>([])
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -33,6 +41,11 @@ export function useStats() {
       .then(([d, w]) => {
         setDaily(d)
         setWeekly(w.days ?? [])
+        setWeeklyStats({
+          days: w.days ?? [],
+          currentWeekTotal: w.currentWeekTotal ?? 0,
+          previousWeekTotal: w.previousWeekTotal ?? 0,
+        })
       })
       .catch((e) => { if (e.name !== "AbortError") console.error("useStats:", e) })
       .finally(() => setLoading(false))
@@ -40,5 +53,5 @@ export function useStats() {
     return () => controller.abort()
   }, [])
 
-  return { daily, weekly, loading }
+  return { daily, weekly, weeklyStats, loading }
 }

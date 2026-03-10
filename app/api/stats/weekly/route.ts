@@ -8,15 +8,15 @@ export async function GET() {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 })
   }
 
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
-  sevenDaysAgo.setHours(0, 0, 0, 0)
+  const fourteenDaysAgo = new Date()
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13)
+  fourteenDaysAgo.setHours(0, 0, 0, 0)
 
-  const sessions = await prisma.focusSession.findMany({
+  const allSessions = await prisma.focusSession.findMany({
     where: {
       userId: session.user.id,
       status: "COMPLETED",
-      startedAt: { gte: sevenDaysAgo },
+      startedAt: { gte: fourteenDaysAgo },
     },
     select: { startedAt: true, actualMinutes: true },
   })
@@ -29,7 +29,7 @@ export async function GET() {
     d.setHours(0, 0, 0, 0)
     const dateStr = d.toISOString().split("T")[0]
 
-    const minutes = sessions
+    const minutes = allSessions
       .filter((s) => {
         const sd = new Date(s.startedAt)
         sd.setHours(0, 0, 0, 0)
@@ -40,5 +40,16 @@ export async function GET() {
     days.push({ date: dateStr, minutes })
   }
 
-  return NextResponse.json({ days })
+  // Önceki hafta toplamı (7-13 gün önce)
+  const now = Date.now()
+  const previousWeekTotal = allSessions
+    .filter((s) => {
+      const daysAgo = Math.floor((now - new Date(s.startedAt).getTime()) / (1000 * 60 * 60 * 24))
+      return daysAgo >= 7 && daysAgo <= 13
+    })
+    .reduce((sum, s) => sum + s.actualMinutes, 0)
+
+  const currentWeekTotal = days.reduce((sum, d) => sum + d.minutes, 0)
+
+  return NextResponse.json({ days, currentWeekTotal, previousWeekTotal })
 }
