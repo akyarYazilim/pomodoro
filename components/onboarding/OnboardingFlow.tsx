@@ -3,11 +3,20 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { PersonaStep, type Persona } from "./PersonaStep"
 import { GoalStep } from "./GoalStep"
 import { TimerStep } from "./TimerStep"
 import { FirstTaskStep } from "./FirstTaskStep"
 
-type Step = 1 | 2 | 3
+type Step = 1 | 2 | 3 | 4
+
+const PERSONA_DEFAULTS: Record<Persona, { mode: "POMODORO" | "FLOWTIME"; minutes: number }> = {
+  student:    { mode: "POMODORO", minutes: 25 },
+  freelancer: { mode: "FLOWTIME", minutes: 25 },
+  remote:     { mode: "POMODORO", minutes: 25 },
+  adhd:       { mode: "POMODORO", minutes: 15 },
+  general:    { mode: "POMODORO", minutes: 25 },
+}
 
 export function OnboardingFlow() {
   const router = useRouter()
@@ -16,9 +25,17 @@ export function OnboardingFlow() {
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
 
+  const [persona, setPersona] = useState<Persona>("general")
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(120)
   const [defaultTimerMode, setDefaultTimerMode] = useState<"POMODORO" | "FLOWTIME">("POMODORO")
   const [pomodoroMinutes, setPomodoroMinutes] = useState(25)
+
+  function handlePersonaChange(p: Persona) {
+    setPersona(p)
+    const defaults = PERSONA_DEFAULTS[p]
+    setDefaultTimerMode(defaults.mode)
+    setPomodoroMinutes(defaults.minutes)
+  }
 
   async function handleComplete(taskTitle?: string) {
     setLoading(true)
@@ -26,7 +43,7 @@ export function OnboardingFlow() {
       await fetch("/api/user/onboarding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dailyGoalMinutes, defaultTimerMode, pomodoroMinutes }),
+        body: JSON.stringify({ dailyGoalMinutes, defaultTimerMode, pomodoroMinutes, persona }),
       })
 
       if (taskTitle) {
@@ -46,11 +63,18 @@ export function OnboardingFlow() {
   }
 
   const steps = [
+    <PersonaStep
+      key="persona"
+      persona={persona}
+      onPersonaChange={handlePersonaChange}
+      onNext={() => setStep(2)}
+    />,
     <GoalStep
       key="goal"
       value={dailyGoalMinutes}
       onChange={setDailyGoalMinutes}
-      onNext={() => setStep(2)}
+      onNext={() => setStep(3)}
+      onBack={() => setStep(1)}
     />,
     <TimerStep
       key="timer"
@@ -58,13 +82,13 @@ export function OnboardingFlow() {
       pomodoroMinutes={pomodoroMinutes}
       onModeChange={setDefaultTimerMode}
       onPomodoroMinutesChange={setPomodoroMinutes}
-      onNext={() => setStep(3)}
-      onBack={() => setStep(1)}
+      onNext={() => setStep(4)}
+      onBack={() => setStep(2)}
     />,
     <FirstTaskStep
       key="task"
       onComplete={handleComplete}
-      onBack={() => setStep(2)}
+      onBack={() => setStep(3)}
       loading={loading}
     />,
   ]
@@ -73,7 +97,7 @@ export function OnboardingFlow() {
     <div className="flex flex-col items-center gap-8 w-full">
       {/* Progress dots */}
       <div className="flex gap-2">
-        {([1, 2, 3] as Step[]).map((s) => (
+        {([1, 2, 3, 4] as Step[]).map((s) => (
           <div
             key={s}
             className={`h-2 w-2 rounded-full transition-colors ${

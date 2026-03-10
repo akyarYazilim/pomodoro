@@ -2,29 +2,52 @@
 
 import Link from "next/link"
 import { Timer, CheckSquare, BarChart2, Flame, Clock } from "lucide-react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
 import { SuggestionCard } from "@/components/coach/SuggestionCard"
+import { MilestoneCard } from "@/components/dashboard/MilestoneCard"
 import { useDailyTip } from "@/hooks/useCoach"
 import { useStats } from "@/hooks/useStats"
 import { useStreak } from "@/hooks/useStreak"
 
 export default function DashboardPage() {
-  const { daily, loading: statsLoading } = useStats()
+  const { data: session } = useSession()
+  const { daily, weekly, loading: statsLoading } = useStats()
   const { streak, loading: streakLoading } = useStreak()
   const { tip, loading: tipLoading } = useDailyTip()
 
   const loading = statsLoading || streakLoading
 
+  const firstName = session?.user?.name?.split(" ")[0]
+  const weeklyTotal = weekly.reduce((sum, d) => sum + d.minutes, 0)
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Bugün</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
-        </p>
+        {firstName ? (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Merhaba, {firstName}!
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {weeklyTotal > 0
+                ? `Bu hafta ${formatMinutes(weeklyTotal)} odaklandın. Harika gidiyor!`
+                : new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-2xl font-semibold tracking-tight">Bugün</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
+          </>
+        )}
       </div>
+
+      <MilestoneCard />
 
       <div className="grid grid-cols-2 gap-3">
         <Card>

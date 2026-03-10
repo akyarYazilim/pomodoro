@@ -28,6 +28,8 @@ model User {
   lastStreakFreezeUsed DateTime?
   pushToken            String?
   onboardingComplete   Boolean   @default(false)
+  persona              String?
+  firstSessionAt       DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

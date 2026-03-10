@@ -14,9 +14,10 @@ interface GoalStepProps {
   value: number
   onChange: (v: number) => void
   onNext: () => void
+  onBack?: () => void
 }
 
-export function GoalStep({ value, onChange, onNext }: GoalStepProps) {
+export function GoalStep({ value, onChange, onNext, onBack }: GoalStepProps) {
   return (
     <div className="flex flex-col items-center gap-6">
       <div className="text-center">
@@ -42,9 +43,16 @@ export function GoalStep({ value, onChange, onNext }: GoalStepProps) {
         ))}
       </div>
 
-      <Button onClick={onNext} className="mt-2 min-w-[140px]">
-        Devam Et
-      </Button>
+      <div className="flex gap-3 mt-2">
+        {onBack && (
+          <Button variant="ghost" onClick={onBack}>
+            Geri
+          </Button>
+        )}
+        <Button onClick={onNext} className="min-w-[140px]">
+          Devam Et
+        </Button>
+      </div>
     </div>
   )
 }

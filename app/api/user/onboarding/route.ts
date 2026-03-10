@@ -7,6 +7,7 @@ const schema = z.object({
   dailyGoalMinutes: z.number().min(15).max(480),
   defaultTimerMode: z.enum(["POMODORO", "FLOWTIME"]),
   pomodoroMinutes: z.number().min(5).max(90).optional(),
+  persona: z.enum(["student", "freelancer", "remote", "adhd", "general"]).optional(),
 })
 
 export async function PATCH(req: Request) {

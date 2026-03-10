@@ -41,5 +41,13 @@ export async function PATCH(
     },
   })
 
+  // İlk tamamlanan seans — firstSessionAt kaydet
+  if (status === "COMPLETED") {
+    await prisma.user.updateMany({
+      where: { id: session.user.id, firstSessionAt: null },
+      data: { firstSessionAt: new Date() },
+    })
+  }
+
   return NextResponse.json({ success: true, session: updated })
 }
