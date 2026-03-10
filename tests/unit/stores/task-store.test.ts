@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest"
 import { useTaskStore } from "@/stores/task-store"
 import type { Task } from "@/types/task"
 
@@ -73,6 +73,48 @@ describe("Task Store", () => {
       useTaskStore.setState({ tasks: [mockTask] })
       useTaskStore.getState().removeTask("nonexistent")
       expect(useTaskStore.getState().tasks).toHaveLength(1)
+    })
+  })
+
+  describe("fetchTasks", () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it("initialized değilse fetch yapar ve tasks'i doldurur", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ tasks: [mockTask] }),
+      } as Response)
+
+      await useTaskStore.getState().fetchTasks()
+
+      const state = useTaskStore.getState()
+      expect(state.tasks).toHaveLength(1)
+      expect(state.tasks[0].id).toBe("task-1")
+      expect(state.loading).toBe(false)
+      expect(state.initialized).toBe(true)
+    })
+
+    it("initialized ise tekrar fetch yapmaz", async () => {
+      useTaskStore.setState({ tasks: [], loading: false, initialized: true })
+      const fetchSpy = vi.spyOn(global, "fetch")
+
+      await useTaskStore.getState().fetchTasks()
+
+      expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    it("fetch başarısız olursa loading false'a düşer, tasks boş kalır", async () => {
+      vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: false,
+      } as Response)
+
+      await useTaskStore.getState().fetchTasks()
+
+      const state = useTaskStore.getState()
+      expect(state.tasks).toHaveLength(0)
+      expect(state.loading).toBe(false)
     })
   })
 })

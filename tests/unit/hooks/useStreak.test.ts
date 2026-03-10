@@ -57,4 +57,5 @@ describe("useStreak", () => {
 
     expect(abortSpy).toHaveBeenCalled()
   })
+
 })

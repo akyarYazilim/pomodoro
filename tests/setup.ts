@@ -1,9 +1,3 @@
-import { afterAll, beforeAll } from "vitest"
-
-beforeAll(async () => {
-  // integration testler için DB bağlantısı
-})
-
-afterAll(async () => {
-  // cleanup
-})
+// Test setup — integration testler için gerekirse buraya ekle
+// NOT: setupFiles bağlamında beforeAll/afterAll kullanılamaz.
+// Global lifecycle için vitest.config.ts içinde globalSetup kullan.

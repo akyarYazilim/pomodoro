@@ -91,3 +91,52 @@ describe("useTasks — createTask", () => {
     expect(success).toBe(false)
   })
 })
+
+describe("useTasks — deleteTask", () => {
+  it("görevi store'dan kaldırır ve DELETE isteği atar", async () => {
+    const { result } = renderHook(() => useTasks())
+    await act(async () => {
+      await result.current.deleteTask("task-1")
+    })
+    expect(fetch).toHaveBeenCalledWith("/api/tasks/task-1", { method: "DELETE" })
+    expect(result.current.tasks.find((t) => t.id === "task-1")).toBeUndefined()
+  })
+})
+
+describe("useTasks — decomposeTask", () => {
+  it("API başarılı olursa adımları döner", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ steps: ["Adım 1", "Adım 2", "Adım 3"] }),
+    })
+    const { result } = renderHook(() => useTasks())
+    let steps: string[] = []
+    await act(async () => {
+      steps = await result.current.decomposeTask("Büyük görev")
+    })
+    expect(steps).toEqual(["Adım 1", "Adım 2", "Adım 3"])
+  })
+
+  it("API başarısız olursa boş dizi döner", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false })
+    const { result } = renderHook(() => useTasks())
+    let steps: string[] = []
+    await act(async () => {
+      steps = await result.current.decomposeTask("Büyük görev")
+    })
+    expect(steps).toEqual([])
+  })
+
+  it("steps alanı yoksa boş dizi döner", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({}),
+    })
+    const { result } = renderHook(() => useTasks())
+    let steps: string[] = []
+    await act(async () => {
+      steps = await result.current.decomposeTask("Büyük görev")
+    })
+    expect(steps).toEqual([])
+  })
+})
