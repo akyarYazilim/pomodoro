@@ -12,10 +12,18 @@ export function useStreak() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/stats/streak")
-      .then((r) => r.json())
+    const controller = new AbortController()
+
+    fetch("/api/stats/streak", { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`/api/stats/streak ${r.status}`)
+        return r.json()
+      })
       .then(setStreak)
+      .catch((e) => { if (e.name !== "AbortError") console.error("useStreak:", e) })
       .finally(() => setLoading(false))
+
+    return () => controller.abort()
   }, [])
 
   return { streak, loading }

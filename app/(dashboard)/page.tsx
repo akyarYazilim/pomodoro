@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Timer, CheckSquare, BarChart2, Flame, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
 import { SuggestionCard } from "@/components/coach/SuggestionCard"
 import { useDailyTip } from "@/hooks/useCoach"
@@ -20,16 +21,19 @@ interface StreakStats {
 export default function DashboardPage() {
   const [daily, setDaily] = useState<DailyStats | null>(null)
   const [streak, setStreak] = useState<StreakStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
   const { tip, loading: tipLoading } = useDailyTip()
 
   useEffect(() => {
+    const controller = new AbortController()
     Promise.all([
-      fetch("/api/stats/daily").then((r) => r.json()),
-      fetch("/api/stats/streak").then((r) => r.json()),
-    ]).then(([d, s]) => {
-      setDaily(d)
-      setStreak(s)
-    })
+      fetch("/api/stats/daily", { signal: controller.signal }).then((r) => r.json()),
+      fetch("/api/stats/streak", { signal: controller.signal }).then((r) => r.json()),
+    ])
+      .then(([d, s]) => { setDaily(d); setStreak(s) })
+      .catch((e) => { if (e.name !== "AbortError") console.error("dashboard stats:", e) })
+      .finally(() => setStatsLoading(false))
+    return () => controller.abort()
   }, [])
 
   return (
@@ -50,12 +54,18 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tabular-nums">
-              {daily ? formatMinutes(daily.totalMinutes) : "—"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {daily ? `${daily.sessionCount} oturum tamamlandı` : ""}
-            </p>
+            {statsLoading ? (
+              <><Skeleton className="h-9 w-24 mb-1" /><Skeleton className="h-3 w-32" /></>
+            ) : (
+              <>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {daily ? formatMinutes(daily.totalMinutes) : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {daily ? `${daily.sessionCount} oturum tamamlandı` : ""}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -67,13 +77,19 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-semibold tabular-nums">
-              {streak ? streak.currentStreak : "—"}
-              <span className="text-base font-normal text-muted-foreground ml-1">gün</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {streak?.currentStreak ? "Devam ediyor!" : "Bugün başla"}
-            </p>
+            {statsLoading ? (
+              <><Skeleton className="h-9 w-16 mb-1" /><Skeleton className="h-3 w-24" /></>
+            ) : (
+              <>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {streak ? streak.currentStreak : "—"}
+                  <span className="text-base font-normal text-muted-foreground ml-1">gün</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {streak?.currentStreak ? "Devam ediyor!" : "Bugün başla"}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

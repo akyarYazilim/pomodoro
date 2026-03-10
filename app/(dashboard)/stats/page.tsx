@@ -24,7 +24,7 @@ export default function StatsPage() {
         <WeeklySummary weekly={weekly} loading={statsLoading} />
       </div>
 
-      <FocusChart data={weekly} />
+      <FocusChart data={weekly} loading={statsLoading} />
     </div>
   )
 }

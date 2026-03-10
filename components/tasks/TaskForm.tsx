@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,16 +29,22 @@ export function TaskForm({ onSubmit, onCancel }: TaskFormProps) {
     e.preventDefault()
     if (!title.trim()) return
     setLoading(true)
-    await onSubmit({
-      title: title.trim(),
-      priority,
-      tags: [],
-      estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
-    })
-    setLoading(false)
-    setTitle("")
-    setEstimatedMinutes("")
-    setPriority("P3")
+    try {
+      await onSubmit({
+        title: title.trim(),
+        priority,
+        tags: [],
+        estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+      })
+      toast.success("Görev eklendi")
+      setTitle("")
+      setEstimatedMinutes("")
+      setPriority("P3")
+    } catch {
+      toast.error("Görev eklenemedi")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

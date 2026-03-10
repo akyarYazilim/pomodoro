@@ -42,7 +42,8 @@ export function TimerDisplay({
         className={cn(
           "text-8xl font-mono font-semibold tabular-nums transition-colors",
           timeColor,
-          status === "PAUSED" && "opacity-60"
+          status === "PAUSED" && "opacity-60",
+          status === "COMPLETED" && "animate-pulse"
         )}
       >
         {formatSeconds(secondsLeft)}

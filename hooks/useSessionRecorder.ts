@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useCallback } from "react"
+import { toast } from "sonner"
 import type { TimerCompletePayload } from "@/hooks/useTimer"
 import { sounds } from "@/lib/utils/sounds"
 
@@ -50,6 +51,7 @@ export function useSessionRecorder(): SessionRecorderReturn {
         // Streak güncelle
         await fetch("/api/stats/streak", { method: "POST" })
       }
+      toast.success(`${actualMinutes} dakika odaklanma kaydedildi`)
     } catch {
       // Session kaydı arka planda — hata kullanıcıyı engellemez
     }

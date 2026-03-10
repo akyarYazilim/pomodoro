@@ -1,5 +1,6 @@
 import { Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
 import type { WeekDay } from "@/hooks/useStats"
 
@@ -20,10 +21,19 @@ export function WeeklySummary({ weekly, loading }: WeeklySummaryProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold tabular-nums">
-          {loading ? "—" : weekly.length > 0 ? formatMinutes(total) : "—"}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">toplam odaklanma</p>
+        {loading ? (
+          <>
+            <Skeleton className="h-8 w-20 mb-1" />
+            <Skeleton className="h-3 w-24" />
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-semibold tabular-nums">
+              {weekly.length > 0 ? formatMinutes(total) : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">toplam odaklanma</p>
+          </>
+        )}
       </CardContent>
     </Card>
   )

@@ -2,15 +2,29 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
+import { isToday } from "@/lib/utils/date"
 import type { WeekDay } from "@/hooks/useStats"
 
 interface FocusChartProps {
   data: WeekDay[]
+  loading?: boolean
 }
 
-export function FocusChart({ data }: FocusChartProps) {
-  const today = new Date().toISOString().split("T")[0]
+export function FocusChart({ data, loading }: FocusChartProps) {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Son 7 Gün</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-40 w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   if (data.length === 0) return null
 
@@ -44,7 +58,7 @@ export function FocusChart({ data }: FocusChartProps) {
                 <Cell
                   key={entry.date}
                   fill={
-                    entry.date === today
+                    isToday(new Date(entry.date + "T00:00:00"))
                       ? "hsl(var(--foreground))"
                       : "hsl(var(--muted-foreground) / 0.4)"
                   }

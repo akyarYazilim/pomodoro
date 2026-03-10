@@ -1,8 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { Check, Trash2, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 interface Task {
@@ -30,6 +30,15 @@ const priorityColors: Record<Task["priority"], string> = {
 
 export function TaskItem({ task, onComplete, onDelete, onStartTimer }: TaskItemProps) {
   const isDone = task.status === "DONE"
+  const [bouncing, setBouncing] = useState(false)
+
+  function handleComplete() {
+    if (!isDone) {
+      setBouncing(true)
+      setTimeout(() => setBouncing(false), 1000)
+    }
+    onComplete(task.id)
+  }
 
   return (
     <div className={cn(
@@ -37,12 +46,13 @@ export function TaskItem({ task, onComplete, onDelete, onStartTimer }: TaskItemP
       isDone && "opacity-50"
     )}>
       <button
-        onClick={() => onComplete(task.id)}
+        onClick={handleComplete}
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
           isDone
             ? "border-emerald-500 bg-emerald-500 text-white"
-            : "border-muted-foreground/40 hover:border-emerald-500"
+            : "border-muted-foreground/40 hover:border-emerald-500",
+          bouncing && "animate-bounce"
         )}
       >
         {isDone && <Check className="h-3 w-3" />}
