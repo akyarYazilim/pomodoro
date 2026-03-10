@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { renderHook, waitFor } from "@testing-library/react"
 import { useStreak } from "@/hooks/useStreak"
 
-const mockStreak = { currentStreak: 5, longestStreak: 12 }
+const mockStreak = { currentStreak: 5, longestStreak: 12, streakFreezeCount: 1 }
 
 function mockFetch(data: object, ok = true) {
   global.fetch = vi.fn().mockResolvedValue({

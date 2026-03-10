@@ -39,8 +39,19 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     jwt({ token, user, trigger, session }) {
       if (user) {
+        const u = user as {
+          onboardingComplete?: boolean
+          pomodoroMinutes?: number
+          shortBreakMinutes?: number
+          longBreakMinutes?: number
+          defaultTimerMode?: string
+        }
         token.sub = user.id
-        token.onboardingComplete = (user as { onboardingComplete?: boolean }).onboardingComplete ?? false
+        token.onboardingComplete = u.onboardingComplete ?? false
+        token.pomodoroMinutes = u.pomodoroMinutes
+        token.shortBreakMinutes = u.shortBreakMinutes
+        token.longBreakMinutes = u.longBreakMinutes
+        token.defaultTimerMode = u.defaultTimerMode
       }
       if (trigger === "update" && session?.onboardingComplete !== undefined) {
         token.onboardingComplete = session.onboardingComplete
@@ -54,6 +65,10 @@ export const authConfig: NextAuthConfig = {
           ...session.user,
           id: token.sub as string,
           onboardingComplete: token.onboardingComplete as boolean,
+          pomodoroMinutes: token.pomodoroMinutes,
+          shortBreakMinutes: token.shortBreakMinutes,
+          longBreakMinutes: token.longBreakMinutes,
+          defaultTimerMode: token.defaultTimerMode,
         },
       }
     },

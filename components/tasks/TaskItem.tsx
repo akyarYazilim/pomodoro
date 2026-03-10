@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, Trash2, Timer } from "lucide-react"
+import { Check, Trash2, Timer, Scissors, Loader2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +19,8 @@ interface TaskItemProps {
   onComplete: (id: string) => void
   onDelete: (id: string) => void
   onStartTimer?: (id: string) => void
+  onDecompose?: (title: string) => Promise<string[]>
+  onCreateSubtask?: (title: string) => Promise<boolean>
 }
 
 const priorityColors: Record<Task["priority"], string> = {
@@ -28,9 +30,11 @@ const priorityColors: Record<Task["priority"], string> = {
   P4: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
 }
 
-export function TaskItem({ task, onComplete, onDelete, onStartTimer }: TaskItemProps) {
+export function TaskItem({ task, onComplete, onDelete, onStartTimer, onDecompose, onCreateSubtask }: TaskItemProps) {
   const isDone = task.status === "DONE"
   const [bouncing, setBouncing] = useState(false)
+  const [decomposing, setDecomposing] = useState(false)
+  const [steps, setSteps] = useState<string[]>([])
 
   function handleComplete() {
     if (!isDone) {
@@ -40,55 +44,107 @@ export function TaskItem({ task, onComplete, onDelete, onStartTimer }: TaskItemP
     onComplete(task.id)
   }
 
+  async function handleDecompose() {
+    if (!onDecompose) return
+    setDecomposing(true)
+    try {
+      const result = await onDecompose(task.title)
+      setSteps(result)
+    } finally {
+      setDecomposing(false)
+    }
+  }
+
+  async function handleAddSubtask(title: string) {
+    if (!onCreateSubtask) return
+    await onCreateSubtask(title)
+    setSteps((prev) => prev.filter((s) => s !== title))
+  }
+
   return (
-    <div className={cn(
-      "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
-      isDone && "opacity-50"
-    )}>
-      <button
-        onClick={handleComplete}
-        className={cn(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
-          isDone
-            ? "border-emerald-500 bg-emerald-500 text-white"
-            : "border-muted-foreground/40 hover:border-emerald-500",
-          bouncing && "animate-bounce"
-        )}
-      >
-        {isDone && <Check className="h-3 w-3" />}
-      </button>
+    <div className="rounded-lg border">
+      <div className={cn(
+        "flex items-center gap-3 px-3 py-2.5 transition-colors",
+        isDone && "opacity-50"
+      )}>
+        <button
+          onClick={handleComplete}
+          className={cn(
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+            isDone
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-muted-foreground/40 hover:border-emerald-500",
+            bouncing && "animate-bounce"
+          )}
+        >
+          {isDone && <Check className="h-3 w-3" />}
+        </button>
 
-      <span className={cn("flex-1 text-sm", isDone && "line-through text-muted-foreground")}>
-        {task.title}
-      </span>
-
-      <div className="flex items-center gap-1.5">
-        <span className={cn("rounded px-1.5 py-0.5 text-xs font-medium", priorityColors[task.priority])}>
-          {task.priority}
+        <span className={cn("flex-1 text-sm", isDone && "line-through text-muted-foreground")}>
+          {task.title}
         </span>
-        {task.estimatedMinutes && (
-          <span className="text-xs text-muted-foreground">{task.estimatedMinutes}dk</span>
-        )}
-        {onStartTimer && !isDone && (
+
+        <div className="flex items-center gap-1.5">
+          <span className={cn("rounded px-1.5 py-0.5 text-xs font-medium", priorityColors[task.priority])}>
+            {task.priority}
+          </span>
+          {task.estimatedMinutes && (
+            <span className="text-xs text-muted-foreground">{task.estimatedMinutes}dk</span>
+          )}
+          {onDecompose && !isDone && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleDecompose}
+              disabled={decomposing}
+              title="Alt adımlara böl"
+            >
+              {decomposing
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <Scissors className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+          {onStartTimer && !isDone && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => onStartTimer(task.id)}
+              title="Timer başlat"
+            >
+              <Timer className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => onStartTimer(task.id)}
-            title="Timer başlat"
+            onClick={() => onDelete(task.id)}
+            title="Sil"
+            className="text-muted-foreground hover:text-destructive"
           >
-            <Timer className="h-3.5 w-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onDelete(task.id)}
-          title="Sil"
-          className="text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        </div>
       </div>
+
+      {steps.length > 0 && (
+        <div className="border-t px-3 py-2 space-y-1">
+          {steps.map((step, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="flex-1 text-xs text-muted-foreground">{step}</span>
+              {onCreateSubtask && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleAddSubtask(step)}
+                  title="Görev olarak ekle"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

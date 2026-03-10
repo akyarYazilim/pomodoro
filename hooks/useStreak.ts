@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 export interface StreakStats {
   currentStreak: number
   longestStreak: number
+  streakFreezeCount: number
 }
 
 export function useStreak() {
@@ -13,8 +14,19 @@ export function useStreak() {
 
   useEffect(() => {
     const controller = new AbortController()
+    const { signal } = controller
 
-    fetch("/api/stats/streak", { signal: controller.signal })
+    const fetchWithRetry = async (retries = 1): Promise<Response> => {
+      try {
+        return await fetch("/api/stats/streak", { signal })
+      } catch (e) {
+        if ((e as Error).name === "AbortError" || retries === 0) throw e
+        await new Promise((res) => setTimeout(res, 1000))
+        return fetchWithRetry(retries - 1)
+      }
+    }
+
+    fetchWithRetry()
       .then((r) => {
         if (!r.ok) throw new Error(`/api/stats/streak ${r.status}`)
         return r.json()

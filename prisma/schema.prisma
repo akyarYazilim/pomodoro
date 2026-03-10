@@ -21,10 +21,13 @@ model User {
   longBreakMinutes   Int       @default(15)
   dailyGoalMinutes   Int       @default(120)
 
-  currentStreak      Int       @default(0)
-  longestStreak      Int       @default(0)
-  lastActiveDate     DateTime?
-  onboardingComplete Boolean   @default(false)
+  currentStreak        Int       @default(0)
+  longestStreak        Int       @default(0)
+  lastActiveDate       DateTime?
+  streakFreezeCount    Int       @default(1)
+  lastStreakFreezeUsed DateTime?
+  pushToken            String?
+  onboardingComplete   Boolean   @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

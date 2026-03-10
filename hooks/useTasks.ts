@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import { useTaskStore } from "@/stores/task-store"
+import { sounds } from "@/lib/utils/sounds"
 import type { CreateTaskInput } from "@/lib/validators/task"
 
 export function useTasks() {
@@ -32,6 +33,7 @@ export function useTasks() {
     const task = tasks.find((t) => t.id === id)
     if (!task) return
     const newStatus = task.status === "DONE" ? "TODO" : "DONE"
+    if (newStatus === "DONE") sounds.taskDone()
     updateTask(id, { status: newStatus })
     await fetch(`/api/tasks/${id}`, {
       method: "PATCH",
@@ -45,5 +47,16 @@ export function useTasks() {
     await fetch(`/api/tasks/${id}`, { method: "DELETE" })
   }
 
-  return { tasks, activeTasks, doneTasks, loading, createTask, completeTask, deleteTask }
+  async function decomposeTask(title: string): Promise<string[]> {
+    const res = await fetch("/api/coach/decompose", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.steps ?? []
+  }
+
+  return { tasks, activeTasks, doneTasks, loading, createTask, completeTask, deleteTask, decomposeTask }
 }

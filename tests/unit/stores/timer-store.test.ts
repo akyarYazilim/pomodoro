@@ -95,4 +95,76 @@ describe("Timer Store", () => {
       expect(useTimerStore.getState().phase).toBe("LONG_BREAK")
     })
   })
+
+  describe("initFromSession", () => {
+    beforeEach(() => {
+      useTimerStore.setState({
+        mode: "POMODORO",
+        phase: "FOCUS",
+        status: "IDLE",
+        secondsLeft: 25 * 60,
+        pomodoroCount: 0,
+        activeTaskId: null,
+        initialized: false,
+      })
+    })
+
+    it("config ve secondsLeft'i kullanıcı değerleriyle günceller", () => {
+      useTimerStore.getState().initFromSession({
+        pomodoroMinutes: 30,
+        shortBreakMinutes: 10,
+        longBreakMinutes: 20,
+      })
+      const state = useTimerStore.getState()
+      expect(state.config.pomodoroMinutes).toBe(30)
+      expect(state.config.shortBreakMinutes).toBe(10)
+      expect(state.config.longBreakMinutes).toBe(20)
+      expect(state.secondsLeft).toBe(30 * 60)
+      expect(state.initialized).toBe(true)
+    })
+
+    it("initialized iken force=false → state değişmez", () => {
+      useTimerStore.setState({ initialized: true, secondsLeft: 999 })
+      useTimerStore.getState().initFromSession({ pomodoroMinutes: 45 })
+      expect(useTimerStore.getState().secondsLeft).toBe(999)
+    })
+
+    it("initialized iken force=true → config override edilir", () => {
+      useTimerStore.setState({ initialized: true })
+      useTimerStore.getState().initFromSession({ pomodoroMinutes: 45 }, true)
+      expect(useTimerStore.getState().config.pomodoroMinutes).toBe(45)
+      expect(useTimerStore.getState().secondsLeft).toBe(45 * 60)
+    })
+
+    it("FLOWTIME modunda secondsLeft 0 olur", () => {
+      useTimerStore.getState().initFromSession({ defaultTimerMode: "FLOWTIME" })
+      expect(useTimerStore.getState().mode).toBe("FLOWTIME")
+      expect(useTimerStore.getState().secondsLeft).toBe(0)
+    })
+
+    it("eksik alanlar DEFAULT_CONFIG değerlerini korur", () => {
+      useTimerStore.getState().initFromSession({})
+      const state = useTimerStore.getState()
+      expect(state.config.pomodoroMinutes).toBe(25)
+      expect(state.config.shortBreakMinutes).toBe(5)
+      expect(state.config.longBreakMinutes).toBe(15)
+    })
+  })
+
+  describe("deepFocusMode", () => {
+    it("başlangıçta false", () => {
+      expect(useTimerStore.getState().deepFocusMode).toBe(false)
+    })
+
+    it("setDeepFocusMode(true) açar", () => {
+      useTimerStore.getState().setDeepFocusMode(true)
+      expect(useTimerStore.getState().deepFocusMode).toBe(true)
+    })
+
+    it("setDeepFocusMode(false) kapatır", () => {
+      useTimerStore.getState().setDeepFocusMode(true)
+      useTimerStore.getState().setDeepFocusMode(false)
+      expect(useTimerStore.getState().deepFocusMode).toBe(false)
+    })
+  })
 })

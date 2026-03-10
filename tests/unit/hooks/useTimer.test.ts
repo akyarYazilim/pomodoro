@@ -4,10 +4,19 @@ import { renderHook, act } from "@testing-library/react"
 import { useTimer } from "@/hooks/useTimer"
 import { useTimerStore } from "@/stores/timer-store"
 
-// Mock @testing-library/react is available via @testing-library/react
-// but we need to ensure the store resets between tests
+vi.mock("@/lib/utils/sounds", () => ({
+  sounds: {
+    workComplete: vi.fn(),
+    breakEnd: vi.fn(),
+    taskDone: vi.fn(),
+  },
+}))
+
+import { sounds } from "@/lib/utils/sounds"
+
 beforeEach(() => {
   vi.useFakeTimers()
+  vi.clearAllMocks()
   useTimerStore.setState({
     mode: "POMODORO",
     phase: "FOCUS",
@@ -98,6 +107,14 @@ describe("useTimer — Pomodoro", () => {
     act(() => vi.advanceTimersByTime(1000))
     expect(result.current.phase).toBe("SHORT_BREAK")
   })
+
+  it("breakEnd çalar: break fazı bitince FOCUS'a geçerken", () => {
+    useTimerStore.setState({ phase: "SHORT_BREAK", status: "IDLE", secondsLeft: 1 })
+    const { result } = renderHook(() => useTimer())
+    act(() => result.current.start())
+    act(() => vi.advanceTimersByTime(1000))
+    expect(sounds.breakEnd).toHaveBeenCalledOnce()
+  })
 })
 
 describe("useTimer — Flowtime", () => {
@@ -148,5 +165,47 @@ describe("useTimer — Flowtime", () => {
     const { result } = renderHook(() => useTimer(onComplete))
     act(() => result.current.stop())
     expect(onComplete).not.toHaveBeenCalled()
+  })
+})
+
+describe("useTimer — Derin Çalışma Modu", () => {
+  it("deepFocusMode açıkken FOCUS bitince break'e geçmez, FOCUS yeniden başlar", () => {
+    useTimerStore.setState({ secondsLeft: 2, deepFocusMode: true })
+    const onComplete = vi.fn()
+    const { result } = renderHook(() => useTimer(onComplete))
+
+    act(() => result.current.start())
+    act(() => vi.advanceTimersByTime(2000))
+
+    // onComplete çağrılmış olmalı (seans kaydı)
+    expect(onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: "POMODORO", phase: "FOCUS" })
+    )
+    // Faz FOCUS kalmalı (break'e geçmemiş)
+    expect(useTimerStore.getState().phase).toBe("FOCUS")
+    // Status RUNNING (auto-restart)
+    expect(useTimerStore.getState().status).toBe("RUNNING")
+  })
+
+  it("deepFocusMode açıkken breakEnd sesi çalmaz", () => {
+    useTimerStore.setState({ secondsLeft: 2, deepFocusMode: true })
+    const { result } = renderHook(() => useTimer())
+
+    act(() => result.current.start())
+    act(() => vi.advanceTimersByTime(2000))
+
+    expect(sounds.breakEnd).not.toHaveBeenCalled()
+  })
+
+  it("deepFocusMode kapalıyken normal faz geçişi yapılır", () => {
+    useTimerStore.setState({ secondsLeft: 2, deepFocusMode: false })
+    const { result } = renderHook(() => useTimer())
+
+    act(() => result.current.start())
+    act(() => vi.advanceTimersByTime(2000))
+
+    // FOCUS → SHORT_BREAK geçmeli
+    expect(useTimerStore.getState().phase).toBe("SHORT_BREAK")
+    expect(useTimerStore.getState().status).toBe("IDLE")
   })
 })

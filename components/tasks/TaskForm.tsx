@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import type { CreateTaskInput } from "@/lib/validators/task"
 
 const priorityOptions = [
@@ -24,6 +25,8 @@ export function TaskForm({ onSubmit, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState("")
   const [priority, setPriority] = useState<"P1" | "P2" | "P3" | "P4">("P3")
   const [estimatedMinutes, setEstimatedMinutes] = useState("")
+  const [description, setDescription] = useState("")
+  const [dueDate, setDueDate] = useState("")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,11 +38,15 @@ export function TaskForm({ onSubmit, onCancel }: TaskFormProps) {
         priority,
         tags: [],
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+        description: description.trim() || undefined,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       })
       toast.success("Görev eklendi")
       setTitle("")
       setEstimatedMinutes("")
       setPriority("P3")
+      setDescription("")
+      setDueDate("")
     } catch {
       toast.error("Görev eklenemedi")
     } finally {
@@ -58,6 +65,18 @@ export function TaskForm({ onSubmit, onCancel }: TaskFormProps) {
           placeholder="Ne yapacaksın?"
           autoFocus
           required
+        />
+      </div>
+      <div>
+        <Label htmlFor="task-description">Açıklama (isteğe bağlı)</Label>
+        <Textarea
+          id="task-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Detaylar..."
+          maxLength={500}
+          rows={2}
+          className="resize-none"
         />
       </div>
       <div className="flex gap-2">
@@ -83,6 +102,15 @@ export function TaskForm({ onSubmit, onCancel }: TaskFormProps) {
             value={estimatedMinutes}
             onChange={(e) => setEstimatedMinutes(e.target.value)}
             placeholder="25"
+          />
+        </div>
+        <div className="w-36">
+          <Label htmlFor="task-due">Bitiş tarihi</Label>
+          <Input
+            id="task-due"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
       </div>

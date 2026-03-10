@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Timer, CheckSquare, BarChart2, Bot } from "lucide-react"
+import { Timer, CheckSquare, BarChart2, Bot, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/tasks", label: "Görevler", icon: CheckSquare },
   { href: "/stats", label: "İstatistik", icon: BarChart2 },
   { href: "/coach", label: "AI Koç", icon: Bot },
+  { href: "/settings", label: "Ayarlar", icon: Settings },
 ]
 
 export function Sidebar() {

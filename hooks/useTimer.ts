@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react"
 import { useTimerStore } from "@/stores/timer-store"
+import { sounds } from "@/lib/utils/sounds"
 import type { TimerMode, TimerPhase } from "@/types/timer"
 
 export interface TimerCompletePayload {
@@ -23,6 +24,7 @@ export interface UseTimerReturn {
   resume: () => void
   stop: () => void
   skipPhase: () => void
+  quickStart: (minutes: number) => void
 }
 
 export function useTimer(
@@ -56,7 +58,17 @@ export function useTimer(
             durationSeconds: s.secondsLeft === 1 ? 1 : 0,
             taskId: s.activeTaskId,
           })
-          s.nextPhase()
+          const { deepFocusMode, config } = useTimerStore.getState()
+          if (deepFocusMode && s.phase === "FOCUS") {
+            // Auto-restart FOCUS, skip break
+            s.setSecondsLeft(config.pomodoroMinutes * 60)
+            s.setStatus("RUNNING")
+          } else {
+            if (s.phase === "SHORT_BREAK" || s.phase === "LONG_BREAK") {
+              sounds.breakEnd()
+            }
+            s.nextPhase()
+          }
         } else {
           s.setSecondsLeft(s.secondsLeft - 1)
         }
@@ -108,6 +120,12 @@ export function useTimer(
     useTimerStore.getState().nextPhase()
   }, [clearTimer])
 
+  const quickStart = useCallback((minutes: number) => {
+    const s = useTimerStore.getState()
+    s.setSecondsLeft(minutes * 60)
+    s.setStatus("RUNNING")
+  }, [])
+
   return {
     mode: store.mode,
     phase: store.phase,
@@ -120,5 +138,6 @@ export function useTimer(
     resume,
     stop,
     skipPhase,
+    quickStart,
   }
 }

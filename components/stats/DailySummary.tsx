@@ -32,6 +32,13 @@ export function DailySummary({ stats, loading }: DailySummaryProps) {
             <p className="text-xs text-muted-foreground mt-0.5">
               {stats ? `${stats.sessionCount} oturum` : ""}
             </p>
+            {stats && (stats.pomodoroCount > 0 || stats.flowtimeCount > 0) && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {stats.pomodoroCount > 0 && `🍅 ${stats.pomodoroCount} Pomodoro`}
+                {stats.pomodoroCount > 0 && stats.flowtimeCount > 0 && " · "}
+                {stats.flowtimeCount > 0 && `⏱ ${stats.flowtimeCount} Flowtime`}
+              </p>
+            )}
           </>
         )}
       </CardContent>

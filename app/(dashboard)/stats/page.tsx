@@ -6,6 +6,8 @@ import { DailySummary } from "@/components/stats/DailySummary"
 import { StreakDisplay } from "@/components/stats/StreakDisplay"
 import { WeeklySummary } from "@/components/stats/WeeklySummary"
 import { FocusChart } from "@/components/stats/FocusChart"
+import { WeeklySummaryCard } from "@/components/stats/WeeklySummaryCard"
+import { NotificationPermissionCard } from "@/components/notifications/NotificationPermissionCard"
 
 export default function StatsPage() {
   const { daily, weekly, loading: statsLoading } = useStats()
@@ -24,7 +26,11 @@ export default function StatsPage() {
         <WeeklySummary weekly={weekly} loading={statsLoading} />
       </div>
 
+      <WeeklySummaryCard />
+
       <FocusChart data={weekly} loading={statsLoading} />
+
+      <NotificationPermissionCard />
     </div>
   )
 }

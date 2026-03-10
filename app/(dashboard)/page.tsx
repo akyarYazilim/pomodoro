@@ -119,6 +119,12 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {!loading && streak?.currentStreak === 0 && !daily?.sessionCount && (
+        <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm text-center text-muted-foreground">
+          🌱 Bugün yeniden başlamak için mükemmel bir an. Her büyük yolculuk tek bir adımla başlar.
+        </div>
+      )}
+
       <SuggestionCard tip={tip} loading={tipLoading} />
     </div>
   )

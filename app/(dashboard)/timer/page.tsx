@@ -1,20 +1,46 @@
 "use client"
 
+import { useEffect, useState, useCallback } from "react"
+import { useSession } from "next-auth/react"
+import { Brain } from "lucide-react"
 import { useTimerStore } from "@/stores/timer-store"
-import { useTimer } from "@/hooks/useTimer"
+import { useTimer, type TimerCompletePayload } from "@/hooks/useTimer"
 import { useSessionRecorder } from "@/hooks/useSessionRecorder"
 import { ModeSelector } from "@/components/timer/ModeSelector"
 import { TimerDisplay } from "@/components/timer/TimerDisplay"
 import { TimerControls } from "@/components/timer/TimerControls"
 import { TaskSelector } from "@/components/timer/TaskSelector"
 import { BreakPrompt } from "@/components/timer/BreakPrompt"
+import { ContinueDialog } from "@/components/timer/ContinueDialog"
 import { SessionHistory } from "@/components/timer/SessionHistory"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export default function TimerPage() {
-  const { setMode, setActiveTask, activeTaskId } = useTimerStore()
+  const { data: session } = useSession()
+  const { setMode, setActiveTask, activeTaskId, initFromSession, deepFocusMode, setDeepFocusMode } = useTimerStore()
+  const [justCompleted, setJustCompleted] = useState(false)
+  const [showContinueDialog, setShowContinueDialog] = useState(false)
+
+  useEffect(() => {
+    if (session?.user) {
+      initFromSession(session.user)
+    }
+  }, [session, initFromSession])
+
   const { onTimerComplete } = useSessionRecorder()
-  const { mode, phase, status, secondsLeft, pomodoroCount, start, pause, resume, stop, skipPhase } =
-    useTimer(onTimerComplete)
+
+  const handleComplete = useCallback(
+    (payload: TimerCompletePayload) => {
+      onTimerComplete(payload)
+      setJustCompleted(true)
+      setTimeout(() => setJustCompleted(false), 1500)
+    },
+    [onTimerComplete]
+  )
+
+  const { mode, phase, status, secondsLeft, pomodoroCount, start, pause, resume, stop, skipPhase, quickStart } =
+    useTimer(handleComplete)
 
   const isRunning = status === "RUNNING"
   const showBreakPrompt =
@@ -28,6 +54,23 @@ export default function TimerPage() {
     stop()
   }
 
+  function handleStop() {
+    if (mode === "FLOWTIME" && status === "RUNNING") {
+      setShowContinueDialog(true)
+    } else {
+      stop()
+    }
+  }
+
+  function handleContinue() {
+    setShowContinueDialog(false)
+  }
+
+  function handleFinish() {
+    setShowContinueDialog(false)
+    stop()
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-8">
       <ModeSelector mode={mode} disabled={isRunning} onModeChange={handleModeChange} />
@@ -38,6 +81,7 @@ export default function TimerPage() {
         status={status}
         secondsLeft={secondsLeft}
         pomodoroCount={pomodoroCount}
+        justCompleted={justCompleted}
       />
 
       {showBreakPrompt ? (
@@ -54,9 +98,27 @@ export default function TimerPage() {
           onStart={start}
           onPause={pause}
           onResume={resume}
-          onStop={stop}
+          onStop={handleStop}
           onSkip={skipPhase}
+          onQuickStart={quickStart}
         />
+      )}
+
+      {mode === "POMODORO" && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setDeepFocusMode(!deepFocusMode)}
+          disabled={isRunning}
+          className={cn(
+            "text-xs gap-1.5",
+            deepFocusMode && "text-primary bg-primary/10"
+          )}
+          title="Mola vermeden sürekli odaklan"
+        >
+          <Brain className="h-3.5 w-3.5" />
+          Derin Çalışma {deepFocusMode ? "Açık" : "Kapalı"}
+        </Button>
       )}
 
       <TaskSelector
@@ -66,6 +128,13 @@ export default function TimerPage() {
       />
 
       <SessionHistory />
+
+      <ContinueDialog
+        open={showContinueDialog}
+        elapsedSeconds={secondsLeft}
+        onContinue={handleContinue}
+        onFinish={handleFinish}
+      />
     </div>
   )
 }

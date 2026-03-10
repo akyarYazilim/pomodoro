@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 export interface DailyStats {
   totalMinutes: number
   sessionCount: number
+  pomodoroCount: number
+  flowtimeCount: number
 }
 
 export interface WeekDay {

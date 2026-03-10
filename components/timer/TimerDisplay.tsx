@@ -8,6 +8,7 @@ interface TimerDisplayProps {
   status: TimerStatus
   secondsLeft: number
   pomodoroCount: number
+  justCompleted?: boolean
 }
 
 const phaseLabels: Record<TimerPhase, string> = {
@@ -16,10 +17,15 @@ const phaseLabels: Record<TimerPhase, string> = {
   LONG_BREAK: "Uzun Mola",
 }
 
-const phaseColors: Record<TimerPhase, string> = {
-  FOCUS: "text-foreground",
-  SHORT_BREAK: "text-emerald-600 dark:text-emerald-400",
-  LONG_BREAK: "text-blue-600 dark:text-blue-400",
+function getTimerColor(mode: TimerMode, phase: TimerPhase, secondsLeft: number): string {
+  if (mode === "FLOWTIME") return "text-foreground"
+  if (phase === "FOCUS") {
+    if (secondsLeft <= 120) return "text-red-500 dark:text-red-400"
+    if (secondsLeft <= 300) return "text-amber-500 dark:text-amber-400"
+    return "text-foreground"
+  }
+  if (phase === "SHORT_BREAK") return "text-emerald-600 dark:text-emerald-400"
+  return "text-blue-600 dark:text-blue-400"
 }
 
 export function TimerDisplay({
@@ -28,23 +34,26 @@ export function TimerDisplay({
   status,
   secondsLeft,
   pomodoroCount,
+  justCompleted = false,
 }: TimerDisplayProps) {
   const label = mode === "FLOWTIME" ? "Flowtime" : phaseLabels[phase]
-  const timeColor = mode === "FLOWTIME" ? "text-foreground" : phaseColors[phase]
+  const timeColor = getTimerColor(mode, phase, secondsLeft)
+  const isUrgent = mode === "POMODORO" && phase === "FOCUS" && status === "RUNNING" && secondsLeft <= 120
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className={cn("flex flex-col items-center gap-4", justCompleted && "animate-bounce")}>
       <span className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
         {label}
       </span>
 
       <div
         className={cn(
-          "text-8xl font-mono font-semibold tabular-nums transition-colors",
+          "text-8xl font-mono font-semibold tabular-nums transition-colors duration-500",
           timeColor,
           status === "PAUSED" && "opacity-60",
-          status === "COMPLETED" && "animate-pulse"
+          (status === "COMPLETED" || isUrgent) && "animate-pulse",
         )}
+        style={isUrgent ? { animationDuration: "1.5s" } : undefined}
       >
         {formatSeconds(secondsLeft)}
       </div>

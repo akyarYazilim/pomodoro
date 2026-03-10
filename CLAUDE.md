@@ -87,3 +87,32 @@ Kök nedeni bul. Geçici çözümler yok. Senior developer standardı.
 
 ## Minimum Etki
 Değişiklikler sadece gerekli olan yeri etkilemeli. Yeni bug’lar oluşturma.
+---
+
+# State Management Kuralları (Sprint 4'te belirlendi)
+
+## Katman Tanımları
+
+| Katman | Ne için | Örnekler |
+|--------|---------|----------|
+| **Zustand store** | Cross-component shared + mutable state | `timer-store.ts`, `task-store.ts` |
+| **Custom hook** | Tek sayfaya ait, read-only API verisi | `useStats`, `useStreak`, `useChat`, `useSessionHistory` |
+| **Local useState** | Gerçek UI state (geçici, sadece o bileşen) | form input, dropdown open/close |
+| **Bileşen** | Sadece render + event delegation | hiçbir `fetch()` çağrısı yok |
+
+## Kurallar
+
+1. **Bileşenler `fetch()` çağırmaz** — tüm veri çekme hook veya store'da olmalı
+2. **Aynı veriyi iki yer fetch etme** — ortak veri için Zustand store kullan
+3. **Custom hook pattern**: `AbortController` cleanup + `loading` state + `r.ok` kontrolü
+4. **Zustand store pattern**: `initialized` flag ile double-fetch önle (`get().initialized` check)
+5. **Loading UI**: her zaman `<Skeleton />` kullan, text string asla
+6. **Type tanımları**: `types/` altında merkezi, bileşen içinde interface tanımlama
+
+## Doğru Pattern Örnekleri
+
+**Hook (read-only, tek sayfa):** `hooks/useStats.ts`
+**Store (shared, mutable):** `stores/task-store.ts`
+**Bileşen (ince UI shell):** `components/coach/ChatInterface.tsx`
+**Store test pattern:** `tests/unit/stores/timer-store.test.ts`
+**Hook test pattern:** `tests/unit/hooks/useStats.test.ts`

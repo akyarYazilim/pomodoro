@@ -11,13 +11,24 @@ interface StreakDisplayProps {
 
 export function StreakDisplay({ streak, loading }: StreakDisplayProps) {
   const isActive = !loading && streak && streak.currentStreak > 0
+  const hasFreeze = !loading && streak && streak.streakFreezeCount > 0
 
   return (
     <Card>
       <CardHeader className="pb-1">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Flame className={cn("h-4 w-4", isActive && "text-orange-500 animate-pulse")} />
-          <CardTitle className="text-xs font-medium">Streak</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Flame className={cn("h-4 w-4", isActive && "text-orange-500 animate-pulse")} />
+            <CardTitle className="text-xs font-medium">Streak</CardTitle>
+          </div>
+          {hasFreeze && (
+            <span
+              className="text-xs text-blue-500 font-medium"
+              title="Streak Koruması — 1 defa kullanılabilir"
+            >
+              🧊 {streak?.streakFreezeCount}
+            </span>
+          )}
         </div>
       </CardHeader>
       <CardContent>
