@@ -10,6 +10,8 @@ declare module "next-auth" {
       shortBreakMinutes?: number
       longBreakMinutes?: number
       defaultTimerMode?: string
+      persona?: string
+      plan?: string
     } & DefaultSession["user"]
   }
 }
@@ -21,5 +23,7 @@ declare module "next-auth/jwt" {
     shortBreakMinutes?: number
     longBreakMinutes?: number
     defaultTimerMode?: string
+    persona?: string
+    plan?: string
   }
 }

@@ -33,6 +33,11 @@ model User {
   longestSession       Int       @default(0)
   bestDayMinutes       Int       @default(0)
 
+  plan                 String    @default("free")
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  planExpiresAt        DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -41,6 +46,8 @@ model User {
   tasks         Task[]
   focusSessions FocusSession[]
   coachMessages CoachMessage[]
+  hostedRooms   SharedRoom[]   @relation("HostedRooms")
+  roomMembers   RoomMember[]
 
   @@map("users")
 }
@@ -173,4 +180,30 @@ enum MessageRole {
   USER
   ASSISTANT
   SYSTEM
+}
+
+model SharedRoom {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  name      String?
+  hostId    String
+  host      User         @relation("HostedRooms", fields: [hostId], references: [id], onDelete: Cascade)
+  members   RoomMember[]
+  createdAt DateTime     @default(now())
+  expiresAt DateTime
+
+  @@map("shared_rooms")
+}
+
+model RoomMember {
+  id        String     @id @default(cuid())
+  roomId    String
+  room      SharedRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isWorking Boolean    @default(false)
+  joinedAt  DateTime   @default(now())
+
+  @@unique([roomId, userId])
+  @@map("room_members")
 }

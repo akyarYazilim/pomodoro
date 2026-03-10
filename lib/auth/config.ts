@@ -45,6 +45,8 @@ export const authConfig: NextAuthConfig = {
           shortBreakMinutes?: number
           longBreakMinutes?: number
           defaultTimerMode?: string
+          persona?: string
+          plan?: string
         }
         token.sub = user.id
         token.onboardingComplete = u.onboardingComplete ?? false
@@ -52,6 +54,8 @@ export const authConfig: NextAuthConfig = {
         token.shortBreakMinutes = u.shortBreakMinutes
         token.longBreakMinutes = u.longBreakMinutes
         token.defaultTimerMode = u.defaultTimerMode
+        token.persona = u.persona
+        token.plan = u.plan ?? "free"
       }
       if (trigger === "update" && session?.onboardingComplete !== undefined) {
         token.onboardingComplete = session.onboardingComplete
@@ -69,6 +73,8 @@ export const authConfig: NextAuthConfig = {
           shortBreakMinutes: token.shortBreakMinutes,
           longBreakMinutes: token.longBreakMinutes,
           defaultTimerMode: token.defaultTimerMode,
+          persona: token.persona,
+          plan: token.plan,
         },
       }
     },
