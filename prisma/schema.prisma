@@ -46,8 +46,10 @@ model User {
   tasks         Task[]
   focusSessions FocusSession[]
   coachMessages CoachMessage[]
-  hostedRooms   SharedRoom[]   @relation("HostedRooms")
-  roomMembers   RoomMember[]
+  hostedRooms     SharedRoom[]   @relation("HostedRooms")
+  roomMembers     RoomMember[]
+  ownedTeams      Team[]         @relation("TeamOwner")
+  teamMemberships TeamMember[]
 
   @@map("users")
 }
@@ -180,6 +182,59 @@ enum MessageRole {
   USER
   ASSISTANT
   SYSTEM
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  owner   User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+  invites TeamInvite[]
+
+  @@index([ownerId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+model TeamInvite {
+  id         String    @id @default(cuid())
+  teamId     String
+  email      String
+  token      String    @unique @default(cuid())
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([token])
+  @@map("team_invites")
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
 
 model SharedRoom {

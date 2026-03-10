@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
-import { Timer, CheckSquare, BarChart2, Bot, Settings, Sparkles, Users } from "lucide-react"
+import { Timer, CheckSquare, BarChart2, Bot, Settings, Sparkles, Users, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { isPro } from "@/lib/utils/feature-flags"
 import { ProBadge } from "@/components/ui/ProBadge"
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/coach", label: "AI Koç", icon: Bot },
   { href: "/settings", label: "Ayarlar", icon: Settings },
   { href: "/room", label: "Birlikte Çalış", icon: Users },
+  { href: "/team", label: "Ekip", icon: Building2 },
 ]
 
 export function Sidebar() {

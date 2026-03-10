@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Timer, CheckSquare, BarChart2, Bot, Users } from "lucide-react"
+import { Timer, CheckSquare, BarChart2, Bot, Users, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/stats", label: "İstatistik", icon: BarChart2 },
   { href: "/coach", label: "Koç", icon: Bot },
   { href: "/room", label: "Birlikte", icon: Users },
+  { href: "/team", label: "Ekip", icon: Building2 },
 ]
 
 export function MobileNav() {
