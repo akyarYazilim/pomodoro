@@ -1,13 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTasks } from "@/hooks/useTasks"
+import type { TaskPriority } from "@/types/task"
 
-interface Task {
-  id: string
-  title: string
-  priority: "P1" | "P2" | "P3" | "P4"
+const priorityColors: Record<TaskPriority, string> = {
+  P1: "text-red-600 dark:text-red-400",
+  P2: "text-orange-500 dark:text-orange-400",
+  P3: "text-blue-600 dark:text-blue-400",
+  P4: "text-zinc-500",
 }
 
 interface TaskSelectorProps {
@@ -16,25 +19,11 @@ interface TaskSelectorProps {
   disabled?: boolean
 }
 
-const priorityColors: Record<Task["priority"], string> = {
-  P1: "text-red-600 dark:text-red-400",
-  P2: "text-orange-500 dark:text-orange-400",
-  P3: "text-blue-600 dark:text-blue-400",
-  P4: "text-zinc-500",
-}
-
 export function TaskSelector({ activeTaskId, onSelect, disabled }: TaskSelectorProps) {
-  const [tasks, setTasks] = useState<Task[]>([])
   const [open, setOpen] = useState(false)
+  const { activeTasks } = useTasks()
 
-  useEffect(() => {
-    fetch("/api/tasks")
-      .then((r) => r.json())
-      .then((d) => setTasks(d.tasks?.filter((t: Task & { status: string }) => t.status !== "DONE") ?? []))
-      .catch(() => {})
-  }, [])
-
-  const activeTask = tasks.find((t) => t.id === activeTaskId)
+  const activeTask = activeTasks.find((t) => t.id === activeTaskId)
 
   return (
     <div className="relative">
@@ -68,13 +57,13 @@ export function TaskSelector({ activeTaskId, onSelect, disabled }: TaskSelectorP
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute top-full mt-1 left-0 z-20 w-72 rounded-lg border bg-popover shadow-md">
-            {tasks.length === 0 ? (
+            {activeTasks.length === 0 ? (
               <p className="px-3 py-4 text-sm text-muted-foreground text-center">
                 Aktif görev yok
               </p>
             ) : (
               <ul className="max-h-48 overflow-y-auto p-1">
-                {tasks.map((task) => (
+                {activeTasks.map((task) => (
                   <li key={task.id}>
                     <button
                       className={cn(

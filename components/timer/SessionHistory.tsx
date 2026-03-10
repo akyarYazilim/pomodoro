@@ -1,30 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
-
-interface SessionRecord {
-  id: string
-  mode: "POMODORO" | "FLOWTIME"
-  actualMinutes: number
-  startedAt: string
-  task: { title: string } | null
-}
+import { useSessionHistory } from "@/hooks/useSessionHistory"
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
 }
 
 export function SessionHistory() {
-  const [sessions, setSessions] = useState<SessionRecord[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch("/api/sessions?limit=5")
-      .then((r) => r.json())
-      .then((data) => setSessions(Array.isArray(data) ? data : []))
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false))
-  }, [])
+  const { sessions, loading } = useSessionHistory(5)
 
   if (loading) {
     return (

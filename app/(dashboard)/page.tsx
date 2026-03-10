@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Timer, CheckSquare, BarChart2, Flame, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,33 +7,15 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatMinutes } from "@/lib/utils/format"
 import { SuggestionCard } from "@/components/coach/SuggestionCard"
 import { useDailyTip } from "@/hooks/useCoach"
-
-interface DailyStats {
-  totalMinutes: number
-  sessionCount: number
-}
-
-interface StreakStats {
-  currentStreak: number
-}
+import { useStats } from "@/hooks/useStats"
+import { useStreak } from "@/hooks/useStreak"
 
 export default function DashboardPage() {
-  const [daily, setDaily] = useState<DailyStats | null>(null)
-  const [streak, setStreak] = useState<StreakStats | null>(null)
-  const [statsLoading, setStatsLoading] = useState(true)
+  const { daily, loading: statsLoading } = useStats()
+  const { streak, loading: streakLoading } = useStreak()
   const { tip, loading: tipLoading } = useDailyTip()
 
-  useEffect(() => {
-    const controller = new AbortController()
-    Promise.all([
-      fetch("/api/stats/daily", { signal: controller.signal }).then((r) => r.json()),
-      fetch("/api/stats/streak", { signal: controller.signal }).then((r) => r.json()),
-    ])
-      .then(([d, s]) => { setDaily(d); setStreak(s) })
-      .catch((e) => { if (e.name !== "AbortError") console.error("dashboard stats:", e) })
-      .finally(() => setStatsLoading(false))
-    return () => controller.abort()
-  }, [])
+  const loading = statsLoading || streakLoading
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -54,7 +35,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
+            {loading ? (
               <><Skeleton className="h-9 w-24 mb-1" /><Skeleton className="h-3 w-32" /></>
             ) : (
               <>
@@ -77,7 +58,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {statsLoading ? (
+            {loading ? (
               <><Skeleton className="h-9 w-16 mb-1" /><Skeleton className="h-3 w-24" /></>
             ) : (
               <>

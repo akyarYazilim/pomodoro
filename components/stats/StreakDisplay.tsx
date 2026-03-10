@@ -1,5 +1,6 @@
 import { Flame } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { StreakStats } from "@/hooks/useStreak"
 
@@ -20,13 +21,19 @@ export function StreakDisplay({ streak, loading }: StreakDisplayProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold tabular-nums">
-          {loading ? "—" : streak ? `${streak.currentStreak}` : "—"}
-          <span className="text-sm font-normal text-muted-foreground ml-1">gün</span>
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {!loading && streak ? `En iyi: ${streak.longestStreak} gün` : ""}
-        </p>
+        {loading ? (
+          <><Skeleton className="h-8 w-16 mb-1" /><Skeleton className="h-3 w-24" /></>
+        ) : (
+          <>
+            <p className="text-2xl font-semibold tabular-nums">
+              {streak ? `${streak.currentStreak}` : "—"}
+              <span className="text-sm font-normal text-muted-foreground ml-1">gün</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {streak ? `En iyi: ${streak.longestStreak} gün` : ""}
+            </p>
+          </>
+        )}
       </CardContent>
     </Card>
   )
