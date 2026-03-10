@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,9 +16,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#f97316",
+};
+
 export const metadata: Metadata = {
   title: "Pomodoro — ADHD dostu odaklanma uygulaması",
   description: "Pomodoro ve Flowtime timer, görev yönetimi ve AI koç ile daha verimli çalış.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Pomodoro",
+  },
   openGraph: {
     title: "Pomodoro — ADHD dostu odaklanma uygulaması",
     description: "Pomodoro ve Flowtime timer, görev yönetimi ve AI koç ile daha verimli çalış.",
@@ -47,6 +61,7 @@ export default function RootLayout({
             <Toaster richColors position="bottom-right" />
           </SessionProvider>
         </ThemeProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

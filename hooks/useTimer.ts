@@ -32,6 +32,8 @@ export function useTimer(
 ): UseTimerReturn {
   const store = useTimerStore()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Tracks real-clock timestamp of last tick for background accuracy
+  const lastTickRef = useRef<number>(Date.now())
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -40,27 +42,25 @@ export function useTimer(
     }
   }, [])
 
-  useEffect(() => {
-    if (store.status !== "RUNNING") {
-      clearTimer()
-      return
-    }
-
-    intervalRef.current = setInterval(() => {
+  /**
+   * Advance timer by `elapsed` real seconds.
+   * Used by both the setInterval and the visibilitychange handler.
+   */
+  const advanceTick = useCallback(
+    (elapsed: number) => {
       const s = useTimerStore.getState()
 
       if (s.mode === "POMODORO") {
-        if (s.secondsLeft <= 1) {
+        if (s.secondsLeft <= elapsed) {
           clearTimer()
           onComplete?.({
             mode: s.mode,
             phase: s.phase,
-            durationSeconds: s.secondsLeft === 1 ? 1 : 0,
+            durationSeconds: s.secondsLeft,
             taskId: s.activeTaskId,
           })
           const { deepFocusMode, config } = useTimerStore.getState()
           if (deepFocusMode && s.phase === "FOCUS") {
-            // Auto-restart FOCUS, skip break
             s.setSecondsLeft(config.pomodoroMinutes * 60)
             s.setStatus("RUNNING")
           } else {
@@ -70,16 +70,54 @@ export function useTimer(
             s.nextPhase()
           }
         } else {
-          s.setSecondsLeft(s.secondsLeft - 1)
+          s.setSecondsLeft(s.secondsLeft - elapsed)
         }
       } else {
-        // Flowtime: secondsLeft counts UP from 0 (elapsed time)
-        s.setSecondsLeft(s.secondsLeft + 1)
+        // Flowtime: count elapsed seconds upward
+        s.setSecondsLeft(s.secondsLeft + elapsed)
       }
+    },
+    [clearTimer, onComplete]
+  )
+
+  // Main interval — uses real elapsed time to stay accurate even when throttled
+  useEffect(() => {
+    if (store.status !== "RUNNING") {
+      clearTimer()
+      return
+    }
+
+    lastTickRef.current = Date.now()
+
+    intervalRef.current = setInterval(() => {
+      const now = Date.now()
+      const elapsed = Math.max(1, Math.round((now - lastTickRef.current) / 1000))
+      lastTickRef.current = now
+      advanceTick(elapsed)
     }, 1000)
 
     return clearTimer
-  }, [store.status, store.mode, clearTimer, onComplete])
+  }, [store.status, store.mode, clearTimer, advanceTick])
+
+  // Page Visibility API: sync immediately when tab regains focus
+  useEffect(() => {
+    if (store.status !== "RUNNING") return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const now = Date.now()
+        const elapsed = Math.round((now - lastTickRef.current) / 1000)
+        if (elapsed >= 2) {
+          // Tab was hidden long enough — sync now instead of waiting for next tick
+          lastTickRef.current = now
+          advanceTick(elapsed)
+        }
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+  }, [store.status, advanceTick])
 
   // Cleanup on unmount
   useEffect(() => clearTimer, [clearTimer])
@@ -87,7 +125,6 @@ export function useTimer(
   const start = useCallback(() => {
     const s = useTimerStore.getState()
     if (s.mode === "FLOWTIME") {
-      // Reset elapsed to 0 before starting
       s.setSecondsLeft(0)
     }
     s.setStatus("RUNNING")
